@@ -1,0 +1,78 @@
+ENTITA': CONDOMINIO
+	|Nome
+
+ENTITA': SCALE
+	|Codice
+	&
+	|Relaz. SCALA<>CONDOMINIO
+	*Quota della SCALA (Quota in millesimi spese CONDOMINIO)
+	
+ENTITA': APPARTAMENTO
+	|Interno
+	&
+	|Relaz. APPARTAMENTO<>CONDOMINIO
+	*Quota dell' APPARTAMENTO (Quota in millesimi spese SCALA)
+	
+ENTITA': PROPRIETARIO
+	|C.F.
+	*Nome
+	*Cognome
+	*[1,N]Indirizzo di posta
+	
+ENTITA GENERALIZZ.': SPESA
+	|Nome
+	&
+	|Data apertura (Quando è stata aperta la spesa)
+	*Totale (Totale addebito per spesa)
+ COMPONE
+  >SPESA CONDOMINIALE
+  >SPESA DI SCALA
+  >SPESA APPARTAMENTO
+Ogni spesa viene cancellata l'anno successivo alla data d'apertura
+  
+  
+ENTITA': SALDO
+	|Relaz (PROPRIETARIO>APPARTAMENTO>SALDO)
+	*Totale (Se Totale < 0, il PROPRIETARIO è in debito con il CONDOMINIO;
+			Se totale > 0, il PROPRIETARIO è in credito con il CONDOMINIO;)
+	{
+		QUANDO UNA SPESA SCADE
+		Se SOMMA.OGNI.PAGAMENTO.Totale < DEBITO.TotalePC (Il totale che ogni appartamento deve pagare)
+			ADDEBITA A SALDO LA DIFFERENZA
+		Se SOMMA.OGNI.PAGAMENTO.Totale >= DEBITO.TotalePC
+			VERSA A SALDO LA DIFFERENZA
+	}
+		
+	
+/////////////////////////////////////////////////
+RELAZIONE: STABILE (SCALA<>CONDOMINIO)
+Una SCALA fa parte di un solo APPARTAMENTO; un APPARTAMENTO può avere più SCALE.
+
+RELAZIONE: PARTE (APPARTAMENTO<>CONDOMINIO)
+Un APPARTAMENTI fa parte di una ed una sola SCALA; una SCALA può avere più APPARTAMENTI
+
+RELAZIONE: INTESTAZIONE (PROPRIETARIO>APPARTAMENTO>SALDO)
+Un PROPRIETARIO può essere intestatario di più appartamenti; Un APPARTAMENTO è intestato ad un solo proprietario
+
+RELAZIONE: VERSAMENTO (PROPRIETARIO <> SALDO)
+Un proprietario può aver fatto 0 o più versamenti. Un saldo può essere stato ricaricato 0 o più volte.
+	|Data&Ora
+	|Causale
+	Lo storico dei versamenti viene cancellato ogni anno.
+
+RELAZIONE: DEBITO (SPESA CONDOM \ SPESA SCALA \ SPESA APPART <> CONDOM\ SCALA\ APPART )
+Un (CONDOM\SCALA\APPARTAMENTO) può avere 0 o più DEBITO con (SPESA CONDOM\SPESA SCALA\SPESA APPART);
+Una (SPESA CONDOM\SPESA SCALA\SPESA APPART) deve essere legata ad 1 ed un solo DEBITO con (CONDOM\SCALA\APPART);
+    
+	*Totale P.C. (CONDOM) = {SPESA.Totale /Quota Scala/Quota appart}
+	*Totale P.C. (SCALA) = {SPESA.Totale/Quota appart}
+	*Totale P.C. (APPART) = {SPESA.Totale}
+	
+RELAZIONE: PAGAMENTO (SALDO<>SPESA CONDOM\SCALA\APPART)
+Un pagamento può esistee solo se SALDO.Totale > 0
+Ci possono essere 1 o N PAGAMENTI per 1 SOLA SPESA; Una spesa può non essere pagata.
+	*Totale
+
+
+
+
